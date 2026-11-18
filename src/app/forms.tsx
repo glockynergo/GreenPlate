@@ -5,43 +5,39 @@ import { useRouter } from 'next/navigation'
 import { ArrowRight, Heart, LoaderCircle, Sparkles } from 'lucide-react'
 import { categories, euro, zone } from '@/lib/catalog'
 import { DateTime } from 'luxon'
+import { DEMO_CODE } from '@/lib/demo-data'
+import { InputError } from '@/lib/input'
+import { useDemo } from './demo-provider'
 
-export function ActionForm({ action, children, className, reset = false }: { action: string; children: ReactNode; className?: string; reset?: boolean }) {
+export function ActionForm({ action, children, className, reset = false, confirmation }: { action: string; children: ReactNode; className?: string; reset?: boolean; confirmation?: string }) {
   const router = useRouter()
+  const { apply } = useDemo()
   const [pending, setPending] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState(false)
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (pending) return
+    if (pending || (confirmation && !window.confirm(confirmation))) return
     const form = event.currentTarget
     setPending(true)
     setMessage('')
     try {
-      const response = await fetch('/api/action', { method: 'POST', body: new FormData(form) })
-      const result = await response.json()
-      if (!response.ok) {
-        setError(true)
-        setMessage(result.error)
-        return
-      }
+      const result = await apply(action, new FormData(form))
       if (result.next) {
-        window.location.assign(result.next)
+        router.push(result.next)
         return
       }
       setError(false)
       setMessage(result.message)
       if (reset) form.reset()
-      router.refresh()
-    } catch {
+    } catch (failure) {
       setError(true)
-      setMessage('Connessione non disponibile. Riprova.')
+      setMessage(failure instanceof InputError ? failure.message : 'Si è verificato un problema nella demo. Riprova.')
     } finally {
       setPending(false)
     }
   }
-  return <form className={className} method="post" action="/api/action" onSubmit={submit} aria-busy={pending}>
-    <input type="hidden" name="action" value={action} />
+  return <form className={className} method="post" onSubmit={submit} aria-busy={pending}>
     <fieldset disabled={pending} className="action-fields">{children}</fieldset>
     {pending && <span className="form-loading" role="status"><LoaderCircle size={15} /> Elaborazione…</span>}
     {message && <p className={error ? 'notice notice-error' : 'notice'} role={error ? 'alert' : 'status'}>{message}</p>}
@@ -49,22 +45,19 @@ export function ActionForm({ action, children, className, reset = false }: { act
 }
 
 export function FavoriteButton({ id, saved }: { id: string; saved: boolean }) {
-  const router = useRouter()
+  const { apply } = useDemo()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   async function toggle() {
     setBusy(true)
     setError('')
     const data = new FormData()
-    data.set('action', 'favorite')
     data.set('id', id)
     data.set('remove', saved ? 'yes' : 'no')
     try {
-      const response = await fetch('/api/action', { method: 'POST', body: data })
-      if (!response.ok) setError((await response.json()).error)
-      else router.refresh()
-    } catch {
-      setError('Connessione non disponibile.')
+      await apply('favorite', data)
+    } catch (failure) {
+      setError(failure instanceof InputError ? failure.message : 'Impossibile aggiornare i preferiti.')
     } finally {
       setBusy(false)
     }
@@ -97,18 +90,29 @@ export function AccountForm({ register, seller, next }: { register: boolean; sel
         </select></label>
         <label className="wide">Nome<input name="name" autoComplete="name" maxLength={80} required /></label>
       </>}
-      <label className="wide">Email<input name="email" type="email" autoComplete="email" maxLength={254} required /></label>
-      <label className="wide">Password<input name="password" type="password" autoComplete={register ? 'new-password' : 'current-password'} minLength={register ? 10 : undefined} maxLength={128} required />
-        {register && <small>Usa almeno 10 caratteri.</small>}
-      </label>
+      <label className="wide">Email di prova<input name="email" type="email" maxLength={254} required /></label>
+      {!register && <label className="wide">Codice demo<input name="code" autoComplete="off" maxLength={40} required />
+        <small>Per tutti i profili di prova usa {DEMO_CODE}.</small>
+      </label>}
     </div>
     {register && role === 'seller' && <ShopInputs />}
     <button className="button primary full">{register ? 'Crea account' : 'Accedi'} <ArrowRight size={17} /></button>
   </ActionForm>
 }
 
-export function Checkout({ id, price, stock, requestId }: { id: string; price: number; stock: number; requestId: string }) {
-  const request = useRef(requestId)
+export function DemoAccess({ next }: { next?: string }) {
+  return <div className="demo-access" aria-label="Accesso rapido ai profili di prova">
+    {(['customer', 'seller'] as const).map(role => <ActionForm key={role} action="demo-login">
+      <input type="hidden" name="role" value={role} />
+      {next && <input type="hidden" name="next" value={next} />}
+      <button className="button outline full">{role === 'customer' ? 'Prova come cliente' : 'Prova come venditore'}</button>
+    </ActionForm>)}
+  </div>
+}
+
+export function Checkout({ id, price, stock }: { id: string; price: number; stock: number }) {
+  const request = useRef<string | null>(null)
+  if (request.current === null) request.current = crypto.randomUUID()
   const [quantity, setQuantity] = useState('1')
   const value = Number(quantity)
   const valid = Number.isInteger(value) && value >= 1 && value <= stock

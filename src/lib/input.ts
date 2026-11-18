@@ -2,7 +2,7 @@ import { DateTime } from 'luxon'
 import { category, zone } from './catalog'
 
 export class InputError extends Error {
-  constructor(message: string, public status = 400) { super(message) }
+  constructor(message: string) { super(message) }
 }
 export function read(data: FormData, key: string, label: string, max: number, required = true) {
   const field = data.get(key)
@@ -42,7 +42,7 @@ export function shopInput(data: FormData) {
     description: read(data, 'shopDescription', 'Descrizione attività', 600),
   }
 }
-export function offerInput(data: FormData) {
+export function offerInput(data: FormData, now = new Date()) {
   const type = read(data, 'category', 'Categoria', 30)
   const entry = category(type)
   if (!entry) throw new InputError('Seleziona una categoria valida.')
@@ -60,7 +60,7 @@ export function offerInput(data: FormData) {
   if (price < 1 || original <= price) throw new InputError('Il prezzo scontato deve essere positivo e inferiore al prezzo originale.')
   const starts = pickup(data, 'starts')
   const ends = pickup(data, 'ends')
-  if (ends <= starts || ends <= new Date()) throw new InputError('La fine del ritiro deve essere futura e successiva all’inizio.')
+  if (ends <= starts || ends <= now) throw new InputError('La fine del ritiro deve essere futura e successiva all’inizio.')
   return {
     title: read(data, 'title', 'Titolo', 100),
     description: read(data, 'description', 'Descrizione', 700),

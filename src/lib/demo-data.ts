@@ -1,13 +1,12 @@
-import { PrismaClient } from '@prisma/client'
-import { randomBytes, scryptSync } from 'node:crypto'
-import { DateTime } from 'luxon'
+import type { DemoState, Profile, Shop } from './demo-types'
 
-if (process.env.DEMO_MODE !== 'true') {
-  console.error('Imposta DEMO_MODE=true soltanto nel tuo ambiente locale.')
-  process.exit(1)
-}
-const db = new PrismaClient()
-const demoPassword = 'GreenPlate2026!'
+export const DEMO_CODE = 'GreenPlate2026!'
+
+type OfferSeed = [
+  shop: string, title: string, description: string, category: string, original: number, price: number,
+  stock: number, ingredients: string, allergens: string, storage: string, donation?: boolean,
+]
+
 const shops = [
   ['forno', 'Giulia', 'Forno Brera', 'Panificio', 'Via Solferino 12', 'Milano', 'Pane a lievitazione naturale, focacce e lievitati.'],
   ['orto', 'Giovanni', 'L’Orto di Via Padova', 'Ortofrutta', 'Via Padova 64', 'Milano', 'Frutta e verdura di stagione selezionate al mercato.'],
@@ -16,7 +15,7 @@ const shops = [
   ['misto', 'Paolo', 'La Bottega Gentile', 'Alimentari', 'Via Ostiense 74', 'Roma', 'Una bottega di quartiere con specialità fresche.'],
   ['roma', 'Teresa', 'Forno dei Tigli', 'Panificio', 'Via Appia Nuova 38', 'Roma', 'Pane, pizza in teglia e dolci da forno.'],
 ]
-const offers = [
+const offers: OfferSeed[] = [
   ['forno', 'Box del fornaio', 'Pane rustico, focaccia al rosmarino e panini artigianali del giorno.', 'forno', 1200, 399, 5, 'Farina di frumento, acqua, lievito madre, olio d’oliva, sale, rosmarino.', 'Frumento (glutine).', 'Conservare in luogo fresco e asciutto.'],
   ['orto', 'Cassetta di stagione', 'Una selezione di verdure fresche per fare il pieno di colore.', 'ortofrutta', 1500, 499, 8, 'Zucchine, pomodori, carote, limoni e insalata.', '', 'Tenere al fresco.'],
   ['tavola', 'Pranzo mediterraneo', 'Pasta al pesto di basilico, pomodorini e verdure grigliate.', 'pronti', 1300, 449, 3, 'Pasta di grano duro, basilico, pinoli, formaggio, pomodori, melanzane.', 'Frumento (glutine), latte, pinoli.', 'Conservare in frigorifero a 4 °C.'],
@@ -32,39 +31,31 @@ const offers = [
   ['orto', 'Verdure per la donazione', 'Una cassetta di zucchine, carote e finocchi.', 'ortofrutta', 1100, 300, 2, 'Zucchine, carote, finocchi.', '', 'Tenere al fresco.', true],
   ['forno', 'Box ritiro immediato', 'Una pagnotta e due focaccine. Fascia già iniziata, ideale per provare il ritiro.', 'forno', 1050, 350, 8, 'Farina di frumento, olio, lievito, sale.', 'Frumento (glutine).', 'Conservare in luogo asciutto.'],
 ]
-const now = DateTime.now().setZone('Europe/Rome')
-const at = (minutes) => now.plus({ minutes }).startOf('minute').toJSDate()
-function hash(password) {
-  const salt = randomBytes(16).toString('hex')
-  return salt + ':' + scryptSync(password, salt, 64).toString('hex')
-}
 
-try {
-  await db.$transaction(async tx => {
-    await tx.user.upsert({
-      where: { id: 'demo-customer' }, update: {},
-      create: { id: 'demo-customer', name: 'Andrea', email: 'cliente@greenplate.test', password: hash(demoPassword), role: 'customer', demo: true },
-    })
-    for (const [id, owner, name, kind, address, city, description] of shops) {
-      await tx.user.upsert({
-        where: { id: 'demo-seller-' + id }, update: {},
-        create: { id: 'demo-seller-' + id, name: owner, email: id === 'forno' ? 'venditore@greenplate.test' : id + '@greenplate.test', password: hash(id === 'forno' ? demoPassword : randomBytes(24).toString('hex')), role: 'seller', demo: true,
-          shop: { create: { id: 'demo-shop-' + id, name, kind, address, city, description, demo: true } } },
-      })
-    }
-    for (const [index, [shop, title, description, category, original, price, stock, ingredients, allergens, storage, donation = false]] of offers.entries()) {
+export function createDemo(now = new Date()): DemoState {
+  const at = (minutes: number) => new Date(Math.floor(now.getTime() / 60_000) * 60_000 + minutes * 60_000)
+  const customer: Profile = { id: 'demo-customer', name: 'Andrea', role: 'customer', email: 'cliente@greenplate.test' }
+  const profiles = shops.map<Profile>(([id, name]) => ({
+    id: 'demo-seller-' + id, name, role: 'seller',
+    email: id === 'forno' ? 'venditore@greenplate.test' : id + '@greenplate.test',
+  }))
+  return {
+    version: 1,
+    userId: null,
+    profiles: [customer, ...profiles],
+    shops: shops.map<Shop>(([id, , name, kind, address, city, description]) => ({
+      id: 'demo-shop-' + id, ownerId: 'demo-seller-' + id, name, kind, address, city, description, demo: true,
+    })),
+    offers: offers.map(([shop, title, description, category, original, price, stock, ingredients, allergens, storage, donation = false], index) => {
       const starts = at(index === 13 ? -10 : 160 + (index % 5) * 30)
       const ends = index === 13 ? at(180) : new Date(starts.getTime() + 90 * 60_000)
-      await tx.offer.upsert({
-        where: { id: 'demo-offer-' + (index + 1) }, update: {},
-        create: {
-          id: 'demo-offer-' + (index + 1), shopId: 'demo-shop-' + shop, title, description, category,
-          image: '/images/' + category + '.webp', original, price, stock, ingredients, allergens, storage, starts, ends, donation,
-        },
-      })
-    }
-  }, { timeout: 15000 })
-  console.log('Dati dimostrativi pronti. Il seed conserva dati e fasce già presenti.')
-} finally {
-  await db.$disconnect()
+      return {
+        id: 'demo-offer-' + (index + 1), shopId: 'demo-shop-' + shop, title, description, category,
+        image: '/images/' + category + '.webp', original, price, stock, ingredients, allergens, storage, starts, ends,
+        donation, active: true, updated: now,
+      }
+    }),
+    orders: [],
+    favorites: [],
+  }
 }

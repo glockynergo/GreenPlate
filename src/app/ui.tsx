@@ -1,4 +1,4 @@
-import type { Offer, Shop } from '@prisma/client'
+import type { Offer, Shop } from '@/lib/demo-types'
 import Link from 'next/link'
 import {
   ArrowDown, ArrowRight, Carrot, ChevronRight, Clock3, Croissant, HandHeart, Heart,
@@ -44,7 +44,11 @@ export function Header({ user, route }: { user: Viewer; route: string }) {
 export function Footer() {
   return <footer className="site-footer"><div className="container footer-inner">
     <Brand /><p>Una seconda occasione per il buon cibo.</p>
-    <div><Link href="/offerte">Offerte</Link><Link href="/donazioni">Donazioni</Link><Link href="/#venditori">Per i commercianti</Link></div>
+    <div><Link href="/offerte">Offerte</Link><Link href="/donazioni">Donazioni</Link><Link href="/#venditori">Per i commercianti</Link>
+      <ActionForm action="reset" confirmation="Ripristinare la demo? Profili, ordini e modifiche di prova di questo browser verranno cancellati.">
+        <button className="button outline small">Ripristina demo</button>
+      </ActionForm>
+    </div>
   </div></footer>
 }
 

@@ -6,13 +6,10 @@
     "dev": "node scripts/dev.mjs",
     "build": "next build",
     "start": "next start",
-    "db:setup": "prisma migrate deploy",
-    "db:seed": "node --env-file=.env prisma/seed.mjs",
     "check": "tsc --noEmit",
-    "test:flows": "node scripts/verify.mjs"
+    "test:flows": "tsx --test scripts/verify.ts"
   },
   "dependencies": {
-    "@prisma/client": "6.19.3",
     "lucide-react": "^0.468.0",
     "luxon": "^3.7.2",
     "next": "15.5.29",
@@ -24,7 +21,7 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "prisma": "6.19.3",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.3"
   }
 }
