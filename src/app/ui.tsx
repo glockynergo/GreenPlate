@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { categories, category, euro, slot } from '@/lib/catalog'
 import { ActionForm, FavoriteButton } from './forms'
+import { ThemePicker } from './theme-picker'
 
 export type Viewer = { id: string; name: string; role: string; shop: Shop | null } | null
 export type Listing = Offer & { shop: Shop }
@@ -25,6 +26,7 @@ export function Header({ user, route }: { user: Viewer; route: string }) {
         <Link href="/offerte" aria-current={route === 'offerte' ? 'page' : undefined}>Offerte</Link>
         <Link href="/#come-funziona">Come funziona</Link>
         <Link href="/donazioni" aria-current={route === 'donazioni' ? 'page' : undefined}>Donazioni</Link>
+        <ThemePicker />
       </nav>
       <div className="header-actions">
         {!user ? <>
