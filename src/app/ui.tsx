@@ -2,11 +2,12 @@ import type { Offer, Shop } from '@/lib/demo-types'
 import Link from 'next/link'
 import {
   ArrowDown, ArrowRight, Carrot, ChevronRight, Clock3, Croissant, HandHeart, Heart,
-  LayoutGrid, Leaf, MapPin, Package, Search, ShoppingBag, Sprout, Store, UserRound, Utensils, Wheat,
+  LayoutGrid, Leaf, MapPin, Package, Search, ShoppingBag, Store, UserRound, Utensils, Wheat,
 } from 'lucide-react'
 import { categories, category, euro, slot } from '@/lib/catalog'
 import { ActionForm, FavoriteButton } from './forms'
 import { ThemePicker } from './theme-picker'
+import { BrandMark } from './branding'
 
 export type Viewer = { id: string; name: string; role: string; shop: Shop | null } | null
 export type Listing = Offer & { shop: Shop }
@@ -15,7 +16,7 @@ export const first = (value: SearchParams[string]) => typeof value === 'string' 
 const icons = { Wheat, Carrot, Utensils, Croissant, Package }
 
 export function Brand() {
-  return <Link href="/" className="brand" aria-label="GreenPlate, home"><span className="brand-icon"><Sprout size={24} strokeWidth={2.4} /></span><span>Green<span>Plate</span></span></Link>
+  return <Link href="/" className="brand" aria-label="GreenPlate, home"><BrandMark /><span>Green<span>Plate</span></span></Link>
 }
 
 export function Header({ user, route }: { user: Viewer; route: string }) {
@@ -26,7 +27,6 @@ export function Header({ user, route }: { user: Viewer; route: string }) {
         <Link href="/offerte" aria-current={route === 'offerte' ? 'page' : undefined}>Offerte</Link>
         <Link href="/#come-funziona">Come funziona</Link>
         <Link href="/donazioni" aria-current={route === 'donazioni' ? 'page' : undefined}>Donazioni</Link>
-        <ThemePicker />
       </nav>
       <div className="header-actions">
         {!user ? <>
@@ -39,6 +39,7 @@ export function Header({ user, route }: { user: Viewer; route: string }) {
           <ActionForm action="logout" className="logout"><button className="button outline small">Esci</button></ActionForm>
         </>}
       </div>
+      <ThemePicker />
     </div>
   </header>
 }
