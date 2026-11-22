@@ -97,6 +97,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:1
 .search-field span{display:grid;min-width:0;width:100%;gap:0}
 .search-field b{color:var(--ink);font-size:.75rem}
 .search-field input,.search-field select{min-width:0;width:100%;height:24px;min-height:0;line-height:1.2;border:0;padding:0;background:transparent;color:var(--ink);font-size:.88rem;border-radius:2px;font-weight:600}
+.search-field select{background-color:var(--surface)}
 .search-field input::placeholder{color:var(--muted);opacity:1}
 .search-bar .button{white-space:nowrap}
 .chips{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:20px 0 29px}
@@ -185,6 +186,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:1
 label{font-weight:750}
 .stack label{display:grid;gap:5px;font-size:.9rem}
 input,textarea,select{width:100%;min-height:42px;padding:8px 10px;color:var(--ink);background:var(--surface);border:1px solid var(--control-border);border-radius:8px}
+select option{color:var(--ink);background-color:var(--surface)}
 textarea{min-height:86px;resize:vertical}
 small{color:var(--muted);font-weight:650}
 .stack label.check{display:flex;gap:8px;align-items:center}
