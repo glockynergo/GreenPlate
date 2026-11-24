@@ -2,7 +2,7 @@ import type { Offer, Shop } from '@/lib/demo-types'
 import Link from 'next/link'
 import {
   ArrowDown, ArrowRight, Carrot, ChevronRight, Clock3, Croissant, HandHeart, Heart,
-  LayoutGrid, Leaf, MapPin, Package, Search, ShoppingBag, Store, UserRound, Utensils, Wheat,
+  LayoutGrid, MapPin, Package, Search, ShoppingBag, Store, UserRound, Utensils, Wheat,
 } from 'lucide-react'
 import { categories, category, euro, slot } from '@/lib/catalog'
 import { ActionForm, FavoriteButton } from './forms'
@@ -58,19 +58,18 @@ export function Footer() {
 export function Hero({ discount }: { discount: number }) {
   return <section className="hero">
     <div className="container hero-grid">
-      <div className="hero-copy">
-        <div className="eyebrow"><Leaf size={15} /> MENO SPRECO, PIÙ GUSTO</div>
-        <h1>Salva il cibo,<br /><span>risparmia<br className="hero-mobile-break" /> ogni giorno</span></h1>
+      <div className="hero-copy" data-enter>
+        <h1>Salva il cibo,<br /><span>risparmia ogni giorno</span></h1>
         <p>Scopri il cibo invenduto di negozi e locali, prenotalo a un prezzo scontato e ritiralo in negozio.</p>
         <div className="hero-actions">
           <Link className="button primary" href="#offerte">Scopri le offerte <ArrowDown size={17} /></Link>
           <Link className="button outline" href="#venditori">Sei un commerciante? <ArrowRight size={16} /></Link>
         </div>
       </div>
-      <div className="hero-picture">
+      <div className="hero-picture" data-enter>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/images/hero.webp" alt="Pane artigianale, pomodori e verdure fresche in una borsa di carta" fetchPriority="high" />
-        {discount > 0 && <div className="hero-discount"><span>FINO AL</span><strong>{discount}%</strong><span>DI SCONTO</span></div>}
+        {discount > 0 && <div className="hero-discount"><span>Fino al</span><strong>{discount}%</strong><span>di sconto</span></div>}
       </div>
     </div>
   </section>
@@ -170,7 +169,7 @@ export function HowItWorks() {
     </div></section>
     <section id="venditori" className="container benefits">
       <div><span className="step-icon"><HandHeart size={23} /></span><h2>Più valore a fine giornata</h2><p>Chi compra spende meno e sceglie cosa portare a casa. Chi vende recupera valore dal cibo rimasto e decide contenuto, prezzo e orario.</p></div>
-      <div><p>Ai commercianti va l’80% di ogni vendita. GreenPlate trattiene il 20%. Nessun canone mensile.</p>
+      <div className="seller-terms"><p><strong>80%</strong> di ogni vendita ai commercianti.</p><p>GreenPlate trattiene il 20%. Nessun canone mensile.</p>
         <Link className="button primary" href="/registrati?ruolo=venditore">Apri un account venditore <ArrowRight size={18} /></Link>
       </div>
     </section>
